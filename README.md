@@ -184,6 +184,9 @@ rag-assistant/
 make test      # 29 tests, no network required
 ```
 
+For a hands-on end-to-end walkthrough (CLI, reranker comparison, evaluation, API, UI and
+using your own documents), see [`docs/TESTING.md`](docs/TESTING.md).
+
 ## License
 
 MIT
