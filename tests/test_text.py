@@ -1,4 +1,4 @@
-from rag.text import chunk_text, load_documents
+from rag.text import chunk_text, discover_files, load_documents
 
 
 def test_short_text_single_chunk():
@@ -37,3 +37,29 @@ def test_load_documents_reads_supported_files(tmp_path):
     assert len(ids) == 2
     assert any(source.endswith("a.md") for source in sources)
     assert all(doc.text for doc in documents)
+
+
+def test_discover_files_skips_ignored_and_hidden_dirs(tmp_path):
+    (tmp_path / "keep.md").write_text("keep", encoding="utf-8")
+    nested = tmp_path / "sub"
+    nested.mkdir()
+    (nested / "deep.txt").write_text("deep", encoding="utf-8")
+
+    for ignored in ("node_modules", ".git", ".venv", "__pycache__"):
+        directory = tmp_path / ignored
+        directory.mkdir()
+        (directory / "secret.md").write_text("secret", encoding="utf-8")
+
+    found = {path.name for path in discover_files(tmp_path)}
+
+    assert found == {"keep.md", "deep.txt"}
+
+
+def test_load_documents_skips_unreadable_files(tmp_path):
+    (tmp_path / "keep.md").write_text("alpha content.", encoding="utf-8")
+    (tmp_path / "broken.pdf").write_bytes(b"this is not a real pdf")
+
+    documents = load_documents(tmp_path, chunk_size=100, chunk_overlap=10)
+
+    assert len(documents) == 1
+    assert documents[0].source.endswith("keep.md")

@@ -25,3 +25,11 @@ def test_simple_app_runs_without_exception():
 def test_simple_app_runs_in_english():
     app = _run_app(lang="en")
     assert not app.exception
+
+
+def test_simple_app_folder_mode_renders():
+    app = _run_app()
+    if not app.radio:
+        pytest.skip("app is gated by the Ollama check in this environment")
+    app.radio[0].set_value("Wskaż folder").run()
+    assert not app.exception

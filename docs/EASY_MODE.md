@@ -37,11 +37,37 @@ Uruchomienie z menu pokaże okno terminala z postępem — to normalne.
 
 ### Jak korzystać
 
-1. **Wgraj dokumenty** — przeciągnij pliki PDF, Word (DOCX), TXT lub MD.
-2. Kliknij **„Dodaj do bazy”** — aplikacja przetworzy dokumenty.
-3. **Zadaj pytanie** w polu na dole. Odpowiedź pojawi się z listą źródeł.
-4. Jeśli odpowiedzi nie ma w dokumentach, asystent powie, że **nie ma informacji** —
+1. **Wybierz źródło dokumentów** — „Wgraj pliki” albo „Wskaż folder”.
+2. **Wgraj pliki** — przeciągnij PDF, Word (DOCX), TXT lub MD. Albo **wskaż folder** na
+   komputerze (np. `~/Dokumenty`) i kliknij „Sprawdź folder”, a potem „Indeksuj ten folder”.
+3. Kliknij **„Dodaj do bazy”** / **„Indeksuj ten folder”** — aplikacja przetworzy dokumenty.
+4. **Zadaj pytanie** w polu na dole. Odpowiedź pojawi się z listą źródeł.
+5. Jeśli odpowiedzi nie ma w dokumentach, asystent powie, że **nie ma informacji** —
    niczego nie wymyśla.
+
+> Przy wskazywaniu folderu aplikacja **pomija** katalogi techniczne i ukryte
+> (`.git`, `node_modules`, `.venv`, `__pycache__` itd.), żeby nie indeksować śmieci.
+
+> Duże kolekcje (setki plików) indeksują się długo — pokazujemy **pasek postępu**
+> (osobno faza czytania plików i faza tworzenia embeddingów). Pliki, których nie da się
+> odczytać (np. uszkodzone lub zaszyfrowane PDF), są **pomijane z ostrzeżeniem**, zamiast
+> przerywać całe indeksowanie.
+
+### Wskazanie folderu (linia poleceń)
+
+Jeśli wolisz terminal, użyj `rag.sh` — działa z dowolnego katalogu:
+
+```bash
+~/code_projects/rag-assistant/rag.sh ingest --raw ~/Dokumenty --index data/index-docs
+~/code_projects/rag-assistant/rag.sh ask --index data/index-docs "o co pytasz?"
+```
+
+Albo z katalogu projektu, krócej:
+
+```bash
+make index-folder DIR=~/Dokumenty
+make ask-folder Q="o co pytasz?"
+```
 
 ### Prywatność
 
@@ -91,11 +117,21 @@ This adds an **“Ask your documents”** entry to the application menu and a de
 
 ### How to use
 
-1. **Upload documents** — drag PDF, Word (DOCX), TXT or MD files.
-2. Click **“Add to the library”** to process them.
-3. **Ask a question** in the box at the bottom. The answer comes with a list of sources.
-4. If the answer is not in your documents, the assistant says it **does not have the
+1. **Choose the source** — “Upload files” or “Point at a folder”.
+2. **Upload files** — drag PDF, Word (DOCX), TXT or MD. Or **point at a folder** on your
+   computer (e.g. `~/Documents`), click “Check folder”, then “Index this folder”.
+3. Click **“Add to the library”** / **“Index this folder”** to process them.
+4. **Ask a question** in the box at the bottom. The answer comes with a list of sources.
+5. If the answer is not in your documents, the assistant says it **does not have the
    information** — it does not make things up.
+
+> When pointing at a folder, the app **skips** technical and hidden directories
+> (`.git`, `node_modules`, `.venv`, `__pycache__`, etc.) so it does not index junk.
+
+> Large collections (hundreds of files) take a long time to index; a **progress bar** is
+> shown (a separate phase for reading files and for building embeddings). Files that cannot
+> be read (e.g. corrupted or encrypted PDFs) are **skipped with a warning** instead of
+> aborting the whole indexing run.
 
 ### Privacy
 

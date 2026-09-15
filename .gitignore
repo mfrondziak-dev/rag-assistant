@@ -8,6 +8,7 @@ venv/
 .ruff_cache/
 data/index/
 data/index-simple/
+data/index-*/
 data/uploads/
 data/raw/private/
 data/raw/*.pdf

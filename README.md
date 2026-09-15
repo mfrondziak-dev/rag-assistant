@@ -122,10 +122,11 @@ RERANK=1 make ask Q="Do discounts stack with promotional credits?"
 
 ## Easy mode (for non-technical users)
 
-A friendly, bilingual (PL/EN) browser app: drag in documents, click *Add to the library*,
-and ask questions. No terminal, no commands. It includes a built-in **troubleshooting
-panel** that checks Ollama, the models, your documents and the index, and can start Ollama
-for you.
+A friendly, bilingual (PL/EN) browser app: drag in documents **or point at a folder** on your
+computer, click *Add to the library*, and ask questions. No terminal, no commands. It shows a
+**progress bar** while indexing, **skips unreadable files** instead of failing, and includes
+a built-in **troubleshooting panel** that checks Ollama, the models, your documents and the
+index, and can start Ollama for you.
 
 ```bash
 make easy        # or: ./start.sh
@@ -203,6 +204,7 @@ rag-assistant/
 │   ├── streamlit_app.py  # technical UI (sliders, context)
 │   └── simple_app.py     # bilingual easy-mode UI (upload + chat)
 ├── start.sh              # one-command launcher
+├── rag.sh                # CLI wrapper that works from any directory
 ├── scripts/              # install-desktop.sh (menu shortcut)
 ├── data/raw/             # sample documents (fictional "Aurora Cloud")
 │   └── private/          # your own documents (gitignored)
@@ -214,7 +216,7 @@ rag-assistant/
 ## Testing
 
 ```bash
-make test      # 53 tests, no network required
+make test      # 57 tests, no network required
 ```
 
 For a hands-on end-to-end walkthrough (CLI, reranker comparison, evaluation, API, UI and

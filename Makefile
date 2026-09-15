@@ -5,13 +5,23 @@ Q ?=
 q ?=
 QUESTION := $(strip $(or $(Q),$(q)))
 
-.PHONY: install ingest ask eval serve api easy desktop stop demo-error test clean
+DIR ?= $(HOME)/Dokumenty
+FOLDER_INDEX ?= data/index-docs
+
+.PHONY: install ingest ask eval serve api easy desktop stop demo-error index-folder ask-folder test clean
 
 install:
 	$(PY) -m pip install -r requirements.txt
 
 ingest:
 	$(PY) -m rag.cli ingest
+
+index-folder:
+	$(PY) -m rag.cli ingest --raw "$(DIR)" --index "$(FOLDER_INDEX)"
+
+ask-folder:
+	@if [ -z "$(QUESTION)" ]; then echo 'Usage: make ask-folder Q="your question"'; exit 2; fi
+	$(PY) -m rag.cli ask --index "$(FOLDER_INDEX)" --show-context "$(QUESTION)"
 
 ask:
 	@if [ -z "$(QUESTION)" ]; then echo 'Usage: make ask Q="your question"'; exit 2; fi

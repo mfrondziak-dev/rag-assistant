@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -22,7 +23,7 @@ from rag.simple import (  # noqa: E402
     save_upload,
 )
 from rag.store import VectorStore  # noqa: E402
-from rag.text import SUPPORTED_SUFFIXES  # noqa: E402
+from rag.text import SUPPORTED_SUFFIXES, discover_files  # noqa: E402
 
 st.set_page_config(page_title="Ask your documents", page_icon="📄", layout="wide")
 
@@ -130,43 +131,102 @@ if blocking:
 st.divider()
 st.subheader(t("docs_heading"))
 
-uploaded = st.file_uploader(
-    t("upload_label"),
-    type=sorted(suffix.lstrip(".") for suffix in SUPPORTED_SUFFIXES),
-    accept_multiple_files=True,
-    help=t("upload_help"),
+source = st.radio(
+    t("source_label"),
+    [t("source_upload"), t("source_folder")],
+    horizontal=True,
 )
-if uploaded:
-    for item in uploaded:
-        save_upload(UPLOADS_DIR, item.name, item.getvalue())
-    st.session_state.needs_index = True
 
-files = list_uploads(UPLOADS_DIR)
-if files:
-    st.write(t("docs_present", count=len(files)))
-    with st.expander("📎", expanded=False):
-        for path in files:
-            st.write(f"- {path.name}")
+index_source: Path | None = None
+source_files: list[Path] = []
+index_ready = False
+
+if source == t("source_upload"):
+    uploaded = st.file_uploader(
+        t("upload_label"),
+        type=sorted(suffix.lstrip(".") for suffix in SUPPORTED_SUFFIXES),
+        accept_multiple_files=True,
+        help=t("upload_help"),
+    )
+    if uploaded:
+        for item in uploaded:
+            save_upload(UPLOADS_DIR, item.name, item.getvalue())
+        st.session_state.needs_index = True
+
+    source_files = list_uploads(UPLOADS_DIR)
+    index_source = UPLOADS_DIR
+    index_ready = bool(source_files)
+    if source_files:
+        st.write(t("docs_present", count=len(source_files)))
+        with st.expander("📎", expanded=False):
+            for path in source_files:
+                st.write(f"- {path.name}")
+    else:
+        st.info(t("docs_none"))
+    if st.session_state.needs_index and source_files:
+        st.info(t("needs_index"))
 else:
-    st.info(t("docs_none"))
+    folder_input = st.text_input(
+        t("folder_label"),
+        value="~",
+        key="folder_path",
+        help=t("folder_hint"),
+    )
+    resolved = Path(os.path.expanduser(folder_input.strip() or "~")).resolve()
+    if st.button(t("folder_check")):
+        if resolved.is_dir():
+            st.session_state.folder_checked = str(resolved)
+            st.session_state.folder_count = len(discover_files(resolved))
+        else:
+            st.session_state.folder_checked = None
+            st.session_state.folder_count = 0
 
-if st.session_state.needs_index and files:
-    st.info(t("needs_index"))
+    if not resolved.is_dir():
+        st.error(t("folder_missing"))
+    elif st.session_state.get("folder_checked") == str(resolved):
+        count = int(st.session_state.get("folder_count", 0))
+        if count:
+            st.success(t("folder_found", count=count))
+            if count > 200:
+                st.warning(t("folder_many", count=count))
+            st.caption(t("folder_active", path=resolved))
+            source_files = discover_files(resolved)
+            index_source = resolved
+            index_ready = True
+        else:
+            st.warning(t("folder_none"))
 
 left, right = st.columns([1, 1])
 with left:
-    if st.button(t("index_button"), type="primary", disabled=not files, use_container_width=True):
+    button_label = (
+        t("index_button") if source == t("source_upload") else t("folder_index_button")
+    )
+    if st.button(button_label, type="primary", disabled=not index_ready, use_container_width=True):
+        progress_bar = st.progress(0.0, text=t("phase_reading"))
+
+        def _on_progress(phase: str, done: int, total: int) -> None:
+            label = t("phase_reading") if phase == "reading" else t("phase_embedding")
+            fraction = done / total if total else 0.0
+            progress_bar.progress(min(max(fraction, 0.0), 1.0), text=f"{label} {done}/{total}")
+
         with st.spinner(t("indexing")):
-            store = ingest(settings, UPLOADS_DIR)
-        st.session_state.needs_index = False
-        st.session_state.messages = []
-        st.success(t("indexed_ok", chunks=len(store), files=len(files)))
+            try:
+                store = ingest(settings, index_source, progress=_on_progress)
+            except Exception as exc:
+                st.error(f"{t('index_error')} {exc}")
+                store = None
+        progress_bar.empty()
+        if store is not None:
+            st.session_state.needs_index = False
+            st.session_state.messages = []
+            st.success(t("indexed_ok", chunks=len(store), files=len(source_files)))
 with right:
-    if st.button(t("clear_docs_button"), disabled=not files, use_container_width=True):
-        clear_uploads(UPLOADS_DIR)
-        st.session_state.messages = []
-        st.session_state.needs_index = False
-        st.rerun()
+    if source == t("source_upload"):
+        if st.button(t("clear_docs_button"), disabled=not source_files, use_container_width=True):
+            clear_uploads(UPLOADS_DIR)
+            st.session_state.messages = []
+            st.session_state.needs_index = False
+            st.rerun()
 
 st.divider()
 st.subheader(t("ask_heading"))
