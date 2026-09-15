@@ -33,10 +33,14 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
 
 
 def _cmd_ask(args: argparse.Namespace) -> int:
+    question = args.question.strip()
+    if not question:
+        print("error: question must not be empty", file=sys.stderr)
+        return 2
     settings = _settings_from_args(args)
     store = VectorStore.load(settings.index_dir)
     pipeline = build_pipeline(settings, store)
-    result = pipeline.answer(args.question)
+    result = pipeline.answer(question)
 
     if args.json:
         print(

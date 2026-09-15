@@ -84,7 +84,7 @@ python -m rag.cli eval --judge    # adds LLM-as-judge grounding
 make test
 ```
 
-Expected: `32 passed`. The suite is offline — it needs neither Ollama nor the network.
+Expected: `33 passed`. The suite is offline — it needs neither Ollama nor the network.
 
 ## 7. Experiments (this is where the learning is)
 
@@ -141,3 +141,5 @@ Use the sidebar sliders for `top-k` and `MMR lambda`, and toggle the context vie
 | `No index found in ...` | Run `make ingest` first |
 | Answers are slow | CPU inference; use a smaller `CHAT_MODEL` or lower `TOP_K` |
 | Reranker very slow | It calls the LLM once per candidate; lower `RERANK_CANDIDATES` |
+| `make ask` prints `Usage: make ask Q="your question"` | You passed no question (or only spaces). Pass `Q="..."` (both `Q=` and `q=` work) |
+| `rag ask ""` fails immediately | By design — empty questions are rejected with exit code 2 |

@@ -185,7 +185,7 @@ rag-assistant/
 ## Testing
 
 ```bash
-make test      # 32 tests, no network required
+make test      # 33 tests, no network required
 ```
 
 For a hands-on end-to-end walkthrough (CLI, reranker comparison, evaluation, API, UI and

@@ -1,6 +1,10 @@
 PY ?= $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 export PYTHONPATH := src
 
+Q ?=
+q ?=
+QUESTION := $(strip $(or $(Q),$(q)))
+
 .PHONY: install ingest ask eval serve api test clean
 
 install:
@@ -10,7 +14,8 @@ ingest:
 	$(PY) -m rag.cli ingest
 
 ask:
-	$(PY) -m rag.cli ask "$(Q)" --show-context
+	@if [ -z "$(QUESTION)" ]; then echo 'Usage: make ask Q="your question"'; exit 2; fi
+	$(PY) -m rag.cli ask "$(QUESTION)" --show-context
 
 eval:
 	$(PY) -m rag.cli eval --judge
