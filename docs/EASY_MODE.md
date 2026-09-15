@@ -38,11 +38,15 @@ Uruchomienie z menu pokaże okno terminala z postępem — to normalne.
 ### Jak korzystać
 
 1. **Wybierz źródło dokumentów** — „Wgraj pliki” albo „Wskaż folder”.
-2. **Wgraj pliki** — przeciągnij PDF, Word (DOCX), TXT lub MD. Albo **wskaż folder** na
-   komputerze (np. `~/Dokumenty`) i kliknij „Sprawdź folder”, a potem „Indeksuj ten folder”.
-3. Kliknij **„Dodaj do bazy”** / **„Indeksuj ten folder”** — aplikacja przetworzy dokumenty.
+2. **Wgraj pliki** — przeciągnij PDF, Word (DOCX), TXT lub MD. Albo **wskaż folder**:
+   kliknij **„📁 Wybierz folder…”**, żeby otworzyć systemowe okno wyboru, albo wpisz ścieżkę
+   ręcznie i kliknij „Sprawdź folder”.
+3. Kliknij **„Dodaj do bazy”** / **„Indeksuj ten folder”** — zobaczysz **pasek postępu**
+   (osobno czytanie plików i tworzenie embeddingów).
 4. **Zadaj pytanie** w polu na dole. Odpowiedź pojawi się z listą źródeł.
-5. Jeśli odpowiedzi nie ma w dokumentach, asystent powie, że **nie ma informacji** —
+5. Pod odpowiedzią asystent zaproponuje **klikane pytania uzupełniające** — jedno kliknięcie
+   zada je od razu.
+6. Jeśli odpowiedzi nie ma w dokumentach, asystent powie, że **nie ma informacji** —
    niczego nie wymyśla.
 
 > Przy wskazywaniu folderu aplikacja **pomija** katalogi techniczne i ukryte
@@ -118,11 +122,15 @@ This adds an **“Ask your documents”** entry to the application menu and a de
 ### How to use
 
 1. **Choose the source** — “Upload files” or “Point at a folder”.
-2. **Upload files** — drag PDF, Word (DOCX), TXT or MD. Or **point at a folder** on your
-   computer (e.g. `~/Documents`), click “Check folder”, then “Index this folder”.
-3. Click **“Add to the library”** / **“Index this folder”** to process them.
+2. **Upload files** — drag PDF, Word (DOCX), TXT or MD. Or **point at a folder**: click
+   **“📁 Choose folder…”** to open the system dialog, or type the path and click
+   “Check folder”.
+3. Click **“Add to the library”** / **“Index this folder”** — a **progress bar** shows the
+   reading and embedding phases.
 4. **Ask a question** in the box at the bottom. The answer comes with a list of sources.
-5. If the answer is not in your documents, the assistant says it **does not have the
+5. Below the answer the assistant offers **clickable follow-up questions** — one click asks
+   them.
+6. If the answer is not in your documents, the assistant says it **does not have the
    information** — it does not make things up.
 
 > When pointing at a folder, the app **skips** technical and hidden directories

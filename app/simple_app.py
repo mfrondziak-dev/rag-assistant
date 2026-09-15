@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from rag.config import Settings  # noqa: E402
 from rag.diagnostics import Status, run_diagnostics, try_start_ollama  # noqa: E402
 from rag.factory import build_pipeline  # noqa: E402
+from rag.folder_picker import pick_folder  # noqa: E402
 from rag.i18n import LANGUAGES, translate  # noqa: E402
 from rag.ingest import ingest  # noqa: E402
 from rag.ollama_client import OllamaClient  # noqa: E402
@@ -95,6 +96,7 @@ with st.sidebar:
         top_k = st.slider(t("top_k"), 1, 10, 5)
         mmr = st.slider(t("mmr"), 0.0, 1.0, 0.5, 0.1)
         rerank = st.toggle(t("rerank"), value=False)
+        suggest = st.toggle(t("suggest_toggle"), value=True)
 
     with st.expander(t("diag_title"), expanded=False):
         render_checklist(diagnostics)
@@ -166,12 +168,23 @@ if source == t("source_upload"):
     if st.session_state.needs_index and source_files:
         st.info(t("needs_index"))
 else:
-    folder_input = st.text_input(
-        t("folder_label"),
-        value="~",
-        key="folder_path",
-        help=t("folder_hint"),
-    )
+    if st.session_state.get("pick_request"):
+        st.session_state.folder_path = st.session_state.pop("pick_request")
+    path_col, pick_col = st.columns([4, 1])
+    with path_col:
+        folder_input = st.text_input(
+            t("folder_label"),
+            value="~",
+            key="folder_path",
+            help=t("folder_hint"),
+        )
+    with pick_col:
+        st.write("")
+        if st.button(t("choose_folder"), use_container_width=True):
+            picked = pick_folder()
+            if picked:
+                st.session_state.pick_request = picked
+                st.rerun()
     resolved = Path(os.path.expanduser(folder_input.strip() or "~")).resolve()
     if st.button(t("folder_check")):
         if resolved.is_dir():
@@ -235,26 +248,28 @@ vectors_path = SIMPLE_INDEX_DIR / "vectors.npy"
 if not vectors_path.exists():
     st.info(t("no_docs_info"))
 else:
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-            if message.get("citations"):
-                with st.expander(t("sources")):
-                    for citation in message["citations"]:
-                        st.markdown(
-                            f"**[{citation['index']}]** `{Path(citation['source']).name}` "
-                            f"— {t('score')} {citation['score']:.2f}"
-                        )
-                        st.caption(citation["snippet"])
 
-    question = st.chat_input(t("ask_placeholder"))
-    if question:
+    def render_followups(followups, key_prefix) -> None:
+        if not followups:
+            return
+        st.caption(t("followups_heading"))
+        for offset, suggestion in enumerate(followups):
+            if st.button(
+                suggestion,
+                key=f"followup-{key_prefix}-{offset}",
+                use_container_width=True,
+            ):
+                st.session_state.pending_question = suggestion
+                st.rerun()
+
+    def ask_question(question: str) -> None:
         st.session_state.messages.append({"role": "user", "content": question})
         with st.chat_message("user"):
             st.markdown(question)
 
         with st.chat_message("assistant"):
             with st.spinner(t("thinking")):
+                followups: list[str] = []
                 try:
                     pipeline = get_pipeline(
                         str(SIMPLE_INDEX_DIR),
@@ -266,6 +281,13 @@ else:
                     result = pipeline.answer(question)
                     answer = result.answer
                     citations = [citation.__dict__ for citation in result.citations]
+                    if suggest and settings.followups > 0 and result.used_context:
+                        try:
+                            followups = pipeline.suggest_followups(
+                                question, answer, result.contexts, count=settings.followups
+                            )
+                        except Exception:
+                            followups = []
                 except Exception:
                     answer = t("error_answer")
                     citations = []
@@ -278,7 +300,32 @@ else:
                             f"— {t('score')} {citation['score']:.2f}"
                         )
                         st.caption(citation["snippet"])
+            render_followups(followups, len(st.session_state.messages))
 
         st.session_state.messages.append(
-            {"role": "assistant", "content": answer, "citations": citations}
+            {
+                "role": "assistant",
+                "content": answer,
+                "citations": citations,
+                "followups": followups,
+            }
         )
+
+    for position, message in enumerate(st.session_state.messages):
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if message.get("citations"):
+                with st.expander(t("sources")):
+                    for citation in message["citations"]:
+                        st.markdown(
+                            f"**[{citation['index']}]** `{Path(citation['source']).name}` "
+                            f"— {t('score')} {citation['score']:.2f}"
+                        )
+                        st.caption(citation["snippet"])
+            render_followups(message.get("followups"), position)
+
+    pending = st.session_state.pop("pending_question", None)
+    typed = st.chat_input(t("ask_placeholder"))
+    question = pending or typed
+    if question:
+        ask_question(question)

@@ -84,7 +84,7 @@ python -m rag.cli eval --judge    # adds LLM-as-judge grounding
 make test
 ```
 
-Expected: `57 passed`. The suite is offline — it needs neither Ollama nor the network.
+Expected: `74 passed`. The suite is offline — it needs neither Ollama nor the network.
 
 ## 7. Experiments (this is where the learning is)
 

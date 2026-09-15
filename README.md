@@ -123,9 +123,10 @@ RERANK=1 make ask Q="Do discounts stack with promotional credits?"
 ## Easy mode (for non-technical users)
 
 A friendly, bilingual (PL/EN) browser app: drag in documents **or point at a folder** on your
-computer, click *Add to the library*, and ask questions. No terminal, no commands. It shows a
-**progress bar** while indexing, **skips unreadable files** instead of failing, and includes
-a built-in **troubleshooting panel** that checks Ollama, the models, your documents and the
+computer (with a native **folder picker** button), click *Add to the library*, and ask
+questions. No terminal, no commands. It shows a **progress bar** while indexing, **skips
+unreadable files** instead of failing, **suggests follow-up questions**, and includes a
+built-in **troubleshooting panel** that checks Ollama, the models, your documents and the
 index, and can start Ollama for you.
 
 ```bash
@@ -156,6 +157,7 @@ All settings come from environment variables (see `.env.example`):
 | `MMR_LAMBDA`    | `0.5`                    | 1.0 = relevance, 0.0 = diversity |
 | `RERANK`        | `0`                      | Enable the LLM reranker (0/1)    |
 | `RERANK_CANDIDATES` | `20`                 | Candidates retrieved before rerank |
+| `FOLLOWUPS`     | `3`                      | Suggested follow-up questions (0 disables) |
 
 ## Evaluation
 
@@ -216,7 +218,7 @@ rag-assistant/
 ## Testing
 
 ```bash
-make test      # 57 tests, no network required
+make test      # 74 tests, no network required
 ```
 
 For a hands-on end-to-end walkthrough (CLI, reranker comparison, evaluation, API, UI and

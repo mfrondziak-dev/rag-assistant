@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import re
+
 from .interfaces import LLM
 from .models import Citation, RAGAnswer, SearchResult
 from .retriever import Retriever
@@ -12,7 +15,42 @@ SYSTEM_PROMPT = (
     "Never use outside knowledge and never invent citations."
 )
 
+FOLLOWUP_PROMPT = (
+    "You propose follow-up questions for a document assistant. Given the user's question and "
+    "the assistant's answer, write {count} short follow-up questions the user could ask next, "
+    "answerable from the same documents. Reply with a JSON array of strings and nothing else. "
+    "Do not number them and do not add explanations."
+)
+
 REFUSAL = "I don't have enough information in the provided documents to answer that."
+
+
+def parse_followups(raw: str, limit: int | None = None) -> list[str]:
+    items: list[str] = []
+    match = re.search(r"\[.*\]", raw, re.DOTALL)
+    if match:
+        try:
+            data = json.loads(match.group(0))
+            if isinstance(data, list):
+                items = [str(item).strip() for item in data if str(item).strip()]
+        except (ValueError, TypeError):
+            items = []
+    if not items:
+        bulleted: list[str] = []
+        plain: list[str] = []
+        for line in raw.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if re.match(r"^(?:\d+[.)]|[-*•])\s+", stripped):
+                cleaned = re.sub(r"^(?:\d+[.)]|[-*•])\s+", "", stripped).strip().strip('"').strip()
+                if cleaned:
+                    bulleted.append(cleaned)
+            else:
+                plain.append(stripped.strip('"').strip())
+        items = bulleted or [item for item in plain if item]
+    return items[:limit] if limit else items
+
 
 
 def _snippet(text: str, limit: int = 240) -> str:
@@ -84,3 +122,24 @@ class RagPipeline:
             blocks.append(f"[{i}] source: {result.document.source}\n{result.document.text}")
         context_text = "\n\n".join(blocks)
         return f"Context:\n{context_text}\n\nQuestion: {question}\n\nAnswer with citations:"
+
+    def suggest_followups(
+        self,
+        question: str,
+        answer: str,
+        contexts: list[SearchResult] | None = None,
+        count: int = 3,
+    ) -> list[str]:
+        if count <= 0:
+            return []
+        parts = [f"Question: {question}", f"Answer: {answer}"]
+        if contexts:
+            context_text = "\n\n".join(result.document.text for result in contexts[:2])
+            parts.append(f"Context:\n{context_text}")
+        raw = self._llm.chat(
+            [
+                {"role": "system", "content": FOLLOWUP_PROMPT.format(count=count)},
+                {"role": "user", "content": "\n\n".join(parts)},
+            ]
+        )
+        return parse_followups(raw, limit=count)
