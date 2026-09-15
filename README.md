@@ -44,7 +44,7 @@ parts that actually matter in production:
   measurably improves answer grounding (see the evaluation note below).
 - **HTTP API** — a FastAPI service (`GET /health`, `POST /search`, `POST /ask`) with
   dependency-injected, offline-testable endpoints.
-- **Multiple formats** — Markdown, text, reStructuredText and PDF.
+- **Multiple formats** — Markdown, text, reStructuredText, PDF and DOCX.
 - **Testability** — the retriever, store and pipeline depend on `Embedder`/`LLM` protocols,
   so the whole stack is unit-tested offline with fakes (no network, no Ollama in CI).
 
@@ -62,8 +62,8 @@ parts that actually matter in production:
 | API          | FastAPI + Uvicorn (optional)                                      |
 | Tests        | pytest (offline, dependency-injected fakes)                       |
 
-The hard dependencies are `requests` and `numpy`. `pypdf` (PDF), `streamlit` (UI) and
-`fastapi`/`uvicorn` (API) are optional extras.
+The hard dependencies are `requests` and `numpy`. `pypdf` (PDF), `python-docx` (DOCX),
+`streamlit` (UI) and `fastapi`/`uvicorn` (API) are optional extras.
 
 ## Quickstart
 
@@ -77,7 +77,8 @@ python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Put your documents in data/raw (md, txt, rst, pdf)
+# 3. Put your documents in data/raw (md, txt, rst, pdf, docx).
+#    Keep private files in data/raw/private/ (gitignored).
 
 # 4. Build the index
 make ingest
@@ -174,6 +175,7 @@ rag-assistant/
 │   └── cli.py            # ingest / ask / eval / models / serve / api
 ├── app/streamlit_app.py  # optional UI
 ├── data/raw/             # sample documents (fictional "Aurora Cloud")
+│   └── private/          # your own documents (gitignored)
 ├── data/eval/            # labelled evaluation set
 └── tests/                # offline unit tests
 ```
@@ -181,7 +183,7 @@ rag-assistant/
 ## Testing
 
 ```bash
-make test      # 29 tests, no network required
+make test      # 32 tests, no network required
 ```
 
 For a hands-on end-to-end walkthrough (CLI, reranker comparison, evaluation, API, UI and

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .models import Document
 
-SUPPORTED_SUFFIXES = {".txt", ".md", ".markdown", ".rst", ".pdf"}
+SUPPORTED_SUFFIXES = {".txt", ".md", ".markdown", ".rst", ".pdf", ".docx"}
 
 _SENTENCE_RE = re.compile(r"(?<=[.!?;:])\s+")
 _PARAGRAPH_RE = re.compile(r"\n\s*\n")
@@ -22,8 +22,11 @@ def discover_files(path: str | Path) -> list[Path]:
 
 def read_file(path: str | Path) -> str:
     p = Path(path)
-    if p.suffix.lower() == ".pdf":
+    suffix = p.suffix.lower()
+    if suffix == ".pdf":
         return _read_pdf(p)
+    if suffix == ".docx":
+        return _read_docx(p)
     return p.read_text(encoding="utf-8", errors="replace")
 
 
@@ -37,6 +40,21 @@ def _read_pdf(path: Path) -> str:
     for page in reader.pages:
         pages.append(page.extract_text() or "")
     return "\n\n".join(pages)
+
+
+def _read_docx(path: Path) -> str:
+    try:
+        import docx
+    except ImportError as exc:
+        raise RuntimeError("DOCX support requires python-docx: pip install python-docx") from exc
+    document = docx.Document(str(path))
+    parts = [paragraph.text for paragraph in document.paragraphs if paragraph.text.strip()]
+    for table in document.tables:
+        for row in table.rows:
+            cells = [cell.text.strip() for cell in row.cells]
+            if any(cells):
+                parts.append(" | ".join(cells))
+    return "\n\n".join(parts)
 
 
 def _split_long(segment: str, size: int, overlap: int) -> list[str]:

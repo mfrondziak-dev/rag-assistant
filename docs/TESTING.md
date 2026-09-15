@@ -84,7 +84,7 @@ python -m rag.cli eval --judge    # adds LLM-as-judge grounding
 make test
 ```
 
-Expected: `29 passed`. The suite is offline — it needs neither Ollama nor the network.
+Expected: `32 passed`. The suite is offline — it needs neither Ollama nor the network.
 
 ## 7. Experiments (this is where the learning is)
 
@@ -125,8 +125,9 @@ Use the sidebar sliders for `top-k` and `MMR lambda`, and toggle the context vie
 
 ## 10. The most important test: your own documents
 
-1. Drop a `.md`, `.txt` or `.pdf` file into `data/raw/` (your notes, part of your CV, a
-   manual, anything).
+1. Drop a `.md`, `.txt`, `.pdf` or `.docx` file into `data/raw/` — or, for anything
+   private, into `data/raw/private/` (gitignored). This can be your notes, part of your CV,
+   a manual, anything.
 2. `make ingest` (rebuilds the index from scratch).
 3. `make ask Q="..."` about something only in your file and confirm the citation points to
    the right source.
