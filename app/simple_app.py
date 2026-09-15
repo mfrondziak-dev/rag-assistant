@@ -16,6 +16,7 @@ from rag.folder_picker import pick_folder  # noqa: E402
 from rag.i18n import LANGUAGES, translate  # noqa: E402
 from rag.ingest import ingest  # noqa: E402
 from rag.ollama_client import OllamaClient  # noqa: E402
+from rag.opener import open_path  # noqa: E402
 from rag.simple import (  # noqa: E402
     SIMPLE_INDEX_DIR,
     UPLOADS_DIR,
@@ -262,6 +263,20 @@ else:
                 st.session_state.pending_question = suggestion
                 st.rerun()
 
+    def render_sources(citations, key_prefix) -> None:
+        if not citations:
+            return
+        with st.expander(t("sources")):
+            for citation in citations:
+                st.markdown(
+                    f"**[{citation['index']}]** `{Path(citation['source']).name}` "
+                    f"— {t('score')} {citation['score']:.2f}"
+                )
+                st.caption(citation["snippet"])
+                if st.button(t("open_file"), key=f"open-{key_prefix}-{citation['index']}"):
+                    if not open_path(citation["source"]):
+                        st.warning(citation["source"])
+
     def ask_question(question: str) -> None:
         st.session_state.messages.append({"role": "user", "content": question})
         with st.chat_message("user"):
@@ -292,14 +307,7 @@ else:
                     answer = t("error_answer")
                     citations = []
             st.markdown(answer)
-            if citations:
-                with st.expander(t("sources")):
-                    for citation in citations:
-                        st.markdown(
-                            f"**[{citation['index']}]** `{Path(citation['source']).name}` "
-                            f"— {t('score')} {citation['score']:.2f}"
-                        )
-                        st.caption(citation["snippet"])
+            render_sources(citations, "new")
             render_followups(followups, len(st.session_state.messages))
 
         st.session_state.messages.append(
@@ -314,14 +322,7 @@ else:
     for position, message in enumerate(st.session_state.messages):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-            if message.get("citations"):
-                with st.expander(t("sources")):
-                    for citation in message["citations"]:
-                        st.markdown(
-                            f"**[{citation['index']}]** `{Path(citation['source']).name}` "
-                            f"— {t('score')} {citation['score']:.2f}"
-                        )
-                        st.caption(citation["snippet"])
+            render_sources(message.get("citations"), position)
             render_followups(message.get("followups"), position)
 
     pending = st.session_state.pop("pending_question", None)

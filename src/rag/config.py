@@ -48,6 +48,10 @@ class Settings:
     rerank: bool = field(default_factory=lambda: _get_bool("RERANK", False))
     rerank_candidates: int = field(default_factory=lambda: _get_int("RERANK_CANDIDATES", 20))
     followups: int = field(default_factory=lambda: _get_int("FOLLOWUPS", 3))
+    ocr: bool = field(default_factory=lambda: _get_bool("OCR", True))
+    ocr_lang: str = field(default_factory=lambda: os.getenv("OCR_LANG", "eng"))
+    ocr_dpi: int = field(default_factory=lambda: _get_int("OCR_DPI", 200))
+    ocr_psm: int = field(default_factory=lambda: _get_int("OCR_PSM", 1))
     index_dir: Path = field(
         default_factory=lambda: PROJECT_ROOT / os.getenv("INDEX_DIR", "data/index")
     )

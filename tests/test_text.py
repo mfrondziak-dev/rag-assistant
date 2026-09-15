@@ -1,4 +1,4 @@
-from rag.text import chunk_text, discover_files, load_documents
+from rag.text import chunk_text, discover_files, load_documents, read_file
 
 
 def test_short_text_single_chunk():
@@ -63,3 +63,28 @@ def test_load_documents_skips_unreadable_files(tmp_path):
 
     assert len(documents) == 1
     assert documents[0].source.endswith("keep.md")
+
+
+def test_read_pdf_falls_back_to_ocr(tmp_path, monkeypatch, build_pdf):
+    import rag.ocr as ocr
+
+    pdf = tmp_path / "scan.pdf"
+    pdf.write_bytes(build_pdf(""))
+    monkeypatch.setattr(ocr, "should_ocr", lambda *args, **kwargs: True)
+    monkeypatch.setattr(ocr, "ocr_pdf", lambda *args, **kwargs: "OCR TEXT FROM SCAN")
+
+    assert read_file(pdf) == "OCR TEXT FROM SCAN"
+
+
+def test_read_image_requires_ocr(tmp_path, monkeypatch):
+    import rag.ocr as ocr
+
+    image = tmp_path / "scan.png"
+    image.write_bytes(b"not really a png")
+
+    monkeypatch.setattr(ocr, "enabled", lambda *args, **kwargs: False)
+    assert read_file(image) == ""
+
+    monkeypatch.setattr(ocr, "enabled", lambda *args, **kwargs: True)
+    monkeypatch.setattr(ocr, "ocr_image", lambda *args, **kwargs: "TEXT FROM IMAGE")
+    assert read_file(image) == "TEXT FROM IMAGE"

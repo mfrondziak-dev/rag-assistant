@@ -5,13 +5,15 @@ import re
 from pathlib import Path
 from typing import Callable
 
+from . import ocr
 from .models import Document
+from .ocr import IMAGE_SUFFIXES
 
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_SUFFIXES = {".txt", ".md", ".markdown", ".rst", ".pdf", ".docx"}
+SUPPORTED_SUFFIXES = {".txt", ".md", ".markdown", ".rst", ".pdf", ".docx"} | IMAGE_SUFFIXES
 
 DEFAULT_IGNORED_DIRS = {
     ".git",
@@ -55,6 +57,8 @@ def read_file(path: str | Path) -> str:
         return _read_pdf(p)
     if suffix == ".docx":
         return _read_docx(p)
+    if suffix in IMAGE_SUFFIXES:
+        return _read_image(p)
     return p.read_text(encoding="utf-8", errors="replace")
 
 
@@ -64,10 +68,19 @@ def _read_pdf(path: Path) -> str:
     except ImportError as exc:
         raise RuntimeError("PDF support requires pypdf: pip install pypdf") from exc
     reader = PdfReader(str(path))
-    pages = []
-    for page in reader.pages:
-        pages.append(page.extract_text() or "")
-    return "\n\n".join(pages)
+    pages = [page.extract_text() or "" for page in reader.pages]
+    text = "\n\n".join(pages)
+    if ocr.should_ocr(len(reader.pages), text):
+        ocr_text = ocr.ocr_pdf(path)
+        if len(ocr_text.strip()) > len(text.strip()):
+            return ocr_text
+    return text
+
+
+def _read_image(path: Path) -> str:
+    if not ocr.enabled():
+        return ""
+    return ocr.ocr_image(path)
 
 
 def _read_docx(path: Path) -> str:

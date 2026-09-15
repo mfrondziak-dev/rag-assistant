@@ -52,7 +52,9 @@ powershell -ExecutionPolicy Bypass -File scripts\install-desktop.ps1
    ręcznie i kliknij „Sprawdź folder”.
 3. Kliknij **„Dodaj do bazy”** / **„Indeksuj ten folder”** — zobaczysz **pasek postępu**
    (osobno czytanie plików i tworzenie embeddingów).
-4. **Zadaj pytanie** w polu na dole. Odpowiedź pojawi się z listą źródeł.
+4. **Zadaj pytanie** w polu na dole. Odpowiedź pojawi się z listą źródeł. Przy każdym
+   źródle jest przycisk **„📄 Otwórz plik”**, który otwiera dokument w domyślnej aplikacji
+   (np. czytniku PDF).
 5. Pod odpowiedzią asystent zaproponuje **klikane pytania uzupełniające** — jedno kliknięcie
    zada je od razu.
 6. Jeśli odpowiedzi nie ma w dokumentach, asystent powie, że **nie ma informacji** —
@@ -65,6 +67,10 @@ powershell -ExecutionPolicy Bypass -File scripts\install-desktop.ps1
 > (osobno faza czytania plików i faza tworzenia embeddingów). Pliki, których nie da się
 > odczytać (np. uszkodzone lub zaszyfrowane PDF), są **pomijane z ostrzeżeniem**, zamiast
 > przerywać całe indeksowanie.
+
+> **Zeskanowane PDF-y** (bez warstwy tekstowej) oraz pliki graficzne są odczytywane przez
+> **OCR** (Tesseract), jeśli jest zainstalowany. Domyślnie rozpoznawany jest angielski;
+> żeby dodać polski, ustaw `OCR_LANG=pol+eng` (wymaga pakietu `tesseract-ocr-pol`).
 
 ### Wskazanie folderu (linia poleceń)
 
@@ -145,7 +151,9 @@ powershell -ExecutionPolicy Bypass -File scripts\install-desktop.ps1
    “Check folder”.
 3. Click **“Add to the library”** / **“Index this folder”** — a **progress bar** shows the
    reading and embedding phases.
-4. **Ask a question** in the box at the bottom. The answer comes with a list of sources.
+4. **Ask a question** in the box at the bottom. The answer comes with a list of sources. Each
+   source has a **“📄 Open file”** button that opens the document in your default app (e.g.
+   your PDF reader).
 5. Below the answer the assistant offers **clickable follow-up questions** — one click asks
    them.
 6. If the answer is not in your documents, the assistant says it **does not have the
@@ -158,6 +166,10 @@ powershell -ExecutionPolicy Bypass -File scripts\install-desktop.ps1
 > shown (a separate phase for reading files and for building embeddings). Files that cannot
 > be read (e.g. corrupted or encrypted PDFs) are **skipped with a warning** instead of
 > aborting the whole indexing run.
+
+> **Scanned PDFs** (without a text layer) and image files are read with **OCR** (Tesseract)
+> if it is installed. English is recognised by default; to add Polish set `OCR_LANG=pol+eng`
+> (needs the `tesseract-ocr-pol` package).
 
 ### Privacy
 

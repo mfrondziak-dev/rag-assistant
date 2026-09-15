@@ -48,7 +48,8 @@ parts that actually matter in production:
   dependency-injected, offline-testable endpoints.
 - **Easy mode** — a bilingual (PL/EN) browser app for non-technical users: drag in files,
   click, ask. Launched with one command or from the application menu.
-- **Multiple formats** — Markdown, text, reStructuredText, PDF and DOCX.
+- **Multiple formats** — Markdown, text, reStructuredText, PDF, DOCX and images. Scanned
+  PDFs and images are read with **OCR** (Tesseract) when a text layer is missing.
 - **Testability** — the retriever, store and pipeline depend on `Embedder`/`LLM` protocols,
   so the whole stack is unit-tested offline with fakes (no network, no Ollama in CI).
 
@@ -138,14 +139,32 @@ Enable the LLM reranker for any command with `RERANK=1` (or `--rerank`):
 RERANK=1 make ask Q="Do discounts stack with promotional credits?"
 ```
 
+## OCR for scanned PDFs
+
+Scanned PDFs (and images: png, jpg, webp, tiff, bmp) are read with **Tesseract** when no text
+layer is present. It needs the `tesseract` and `pdftoppm` binaries on your system:
+
+```bash
+# Debian/Ubuntu
+sudo apt install tesseract-ocr poppler-utils tesseract-ocr-pol
+# macOS (Homebrew)
+brew install tesseract poppler
+# Windows: install the Tesseract and Poppler builds and add them to PATH
+```
+
+Control it with `OCR`, `OCR_LANG` (e.g. `pol+eng`) and `OCR_DPI`. Page mode `OCR_PSM=1`
+auto-detects orientation, so upside-down scans are read correctly. If Tesseract is missing,
+OCR is skipped and normal text extraction still works.
+
 ## Easy mode (for non-technical users)
 
 A friendly, bilingual (PL/EN) browser app: drag in documents **or point at a folder** on your
 computer (with a native **folder picker** button), click *Add to the library*, and ask
 questions. No terminal, no commands. It shows a **progress bar** while indexing, **skips
-unreadable files** instead of failing, **suggests follow-up questions**, and includes a
-built-in **troubleshooting panel** that checks Ollama, the models, your documents and the
-index, and can start Ollama for you.
+unreadable files** instead of failing, **suggests follow-up questions**, opens a source file
+in your default app with one click (**Open file**), and includes a built-in **troubleshooting
+panel** that checks Ollama, the models, your documents and the index, and can start Ollama
+for you.
 
 ```bash
 make easy        # or: ./start.sh        (Linux/macOS)
@@ -181,6 +200,10 @@ All settings come from environment variables (see `.env.example`):
 | `RERANK`        | `0`                      | Enable the LLM reranker (0/1)    |
 | `RERANK_CANDIDATES` | `20`                 | Candidates retrieved before rerank |
 | `FOLLOWUPS`     | `3`                      | Suggested follow-up questions (0 disables) |
+| `OCR`           | `1`                      | OCR scanned PDFs/images when no text layer |
+| `OCR_LANG`      | `eng`                    | Tesseract languages, e.g. `pol+eng`      |
+| `OCR_DPI`       | `200`                    | Render DPI for scanned PDF pages         |
+| `OCR_PSM`       | `1`                      | Tesseract page mode (1 = auto + rotate)  |
 
 ## Evaluation
 
@@ -225,6 +248,8 @@ rag-assistant/
 │   ├── i18n.py           # PL/EN strings for the easy-mode UI
 │   ├── simple.py         # safe upload storage + library helpers
 │   ├── folder_picker.py  # native folder chooser (zenity/kdialog/PowerShell/tkinter)
+│   ├── ocr.py            # OCR for scanned PDFs/images (tesseract + pdftoppm)
+│   ├── opener.py         # open a source file with the OS default app
 │   └── cli.py            # ingest / ask / eval / models / serve / api
 ├── app/
 │   ├── streamlit_app.py  # technical UI (sliders, context)
@@ -242,7 +267,7 @@ rag-assistant/
 ## Testing
 
 ```bash
-make test      # 76 tests, no network required
+make test      # 88 tests, no network required
 ```
 
 For a hands-on end-to-end walkthrough (CLI, reranker comparison, evaluation, API, UI and

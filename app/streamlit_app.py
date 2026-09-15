@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from rag.config import Settings  # noqa: E402
 from rag.factory import build_pipeline  # noqa: E402
+from rag.opener import open_path  # noqa: E402
 from rag.store import VectorStore  # noqa: E402
 
 st.set_page_config(page_title="Local RAG Assistant", page_icon="🔎", layout="wide")
@@ -57,6 +58,9 @@ if question:
         for citation in result.citations:
             with st.expander(f"[{citation.index}] {Path(citation.source).name}  ·  score {citation.score:.3f}"):
                 st.write(citation.snippet)
+                if st.button("📄 Open file", key=f"open-{citation.index}"):
+                    if not open_path(citation.source):
+                        st.warning(citation.source)
 
     if show_context and result.contexts:
         st.subheader("Retrieved context")
