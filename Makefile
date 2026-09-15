@@ -5,7 +5,7 @@ Q ?=
 q ?=
 QUESTION := $(strip $(or $(Q),$(q)))
 
-.PHONY: install ingest ask eval serve api test clean
+.PHONY: install ingest ask eval serve api easy desktop stop demo-error test clean
 
 install:
 	$(PY) -m pip install -r requirements.txt
@@ -25,6 +25,18 @@ serve:
 
 api:
 	$(PY) -m rag.cli api
+
+easy:
+	./start.sh
+
+desktop:
+	bash scripts/install-desktop.sh
+
+stop:
+	-pkill -f "streamlit run app/" || true
+
+demo-error:
+	OLLAMA_HOST=http://localhost:9 $(PY) -m streamlit run app/simple_app.py
 
 test:
 	$(PY) -m pytest -q

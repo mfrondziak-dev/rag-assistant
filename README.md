@@ -46,6 +46,8 @@ parts that actually matter in production:
   measurably improves answer grounding (see the evaluation note below).
 - **HTTP API** — a FastAPI service (`GET /health`, `POST /search`, `POST /ask`) with
   dependency-injected, offline-testable endpoints.
+- **Easy mode** — a bilingual (PL/EN) browser app for non-technical users: drag in files,
+  click, ask. Launched with one command or from the application menu.
 - **Multiple formats** — Markdown, text, reStructuredText, PDF and DOCX.
 - **Testability** — the retriever, store and pipeline depend on `Embedder`/`LLM` protocols,
   so the whole stack is unit-tested offline with fakes (no network, no Ollama in CI).
@@ -118,6 +120,26 @@ Enable the LLM reranker for any command with `RERANK=1` (or `--rerank`):
 RERANK=1 make ask Q="Do discounts stack with promotional credits?"
 ```
 
+## Easy mode (for non-technical users)
+
+A friendly, bilingual (PL/EN) browser app: drag in documents, click *Add to the library*,
+and ask questions. No terminal, no commands. It includes a built-in **troubleshooting
+panel** that checks Ollama, the models, your documents and the index, and can start Ollama
+for you.
+
+```bash
+make easy        # or: ./start.sh
+```
+
+`start.sh` creates the environment, starts Ollama if needed, downloads the missing models
+once, and opens the app. To launch it from the application menu with a single click:
+
+```bash
+make desktop     # or: bash scripts/install-desktop.sh
+```
+
+See [`docs/EASY_MODE.md`](docs/EASY_MODE.md) for the full walkthrough.
+
 ## Configuration
 
 All settings come from environment variables (see `.env.example`):
@@ -174,10 +196,17 @@ rag-assistant/
 │   ├── ingest.py         # build the index
 │   ├── factory.py        # wire components from Settings
 │   ├── api.py            # FastAPI service (/health, /search, /ask)
+│   ├── i18n.py           # PL/EN strings for the easy-mode UI
+│   ├── simple.py         # safe upload storage + library helpers
 │   └── cli.py            # ingest / ask / eval / models / serve / api
-├── app/streamlit_app.py  # optional UI
+├── app/
+│   ├── streamlit_app.py  # technical UI (sliders, context)
+│   └── simple_app.py     # bilingual easy-mode UI (upload + chat)
+├── start.sh              # one-command launcher
+├── scripts/              # install-desktop.sh (menu shortcut)
 ├── data/raw/             # sample documents (fictional "Aurora Cloud")
 │   └── private/          # your own documents (gitignored)
+├── data/uploads/         # easy-mode uploads (gitignored)
 ├── data/eval/            # labelled evaluation set
 └── tests/                # offline unit tests
 ```
@@ -185,7 +214,7 @@ rag-assistant/
 ## Testing
 
 ```bash
-make test      # 33 tests, no network required
+make test      # 53 tests, no network required
 ```
 
 For a hands-on end-to-end walkthrough (CLI, reranker comparison, evaluation, API, UI and

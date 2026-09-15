@@ -84,7 +84,7 @@ python -m rag.cli eval --judge    # adds LLM-as-judge grounding
 make test
 ```
 
-Expected: `33 passed`. The suite is offline — it needs neither Ollama nor the network.
+Expected: `53 passed`. The suite is offline — it needs neither Ollama nor the network.
 
 ## 7. Experiments (this is where the learning is)
 
@@ -123,7 +123,26 @@ make serve      # http://localhost:8501
 
 Use the sidebar sliders for `top-k` and `MMR lambda`, and toggle the context view.
 
-## 10. The most important test: your own documents
+## 10. Easy mode (browser upload + chat)
+
+```bash
+make easy       # or ./start.sh
+```
+
+A bilingual (PL/EN) app opens. Upload a document, click **Add to the library**, then ask a
+question in the box at the bottom. Switch the language in the sidebar. This is the flow a
+non-technical user sees. See [`EASY_MODE.md`](EASY_MODE.md).
+
+To see the troubleshooting panel without touching your real Ollama, point the app at a dead
+address (one line, nothing is broken):
+
+```bash
+make demo-error
+```
+
+The app then shows the ❌ diagnostics panel; use **Check again** to refresh.
+
+## 11. The most important test: your own documents
 
 1. Drop a `.md`, `.txt`, `.pdf` or `.docx` file into `data/raw/` — or, for anything
    private, into `data/raw/private/` (gitignored). This can be your notes, part of your CV,

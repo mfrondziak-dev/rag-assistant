@@ -7,6 +7,8 @@ venv/
 .mypy_cache/
 .ruff_cache/
 data/index/
+data/index-simple/
+data/uploads/
 data/raw/private/
 data/raw/*.pdf
 data/raw/*.docx
