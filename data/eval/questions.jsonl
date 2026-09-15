@@ -1,0 +1,8 @@
+{"question": "How much does the Team plan cost per month?", "relevant_sources": ["aurora-pricing.md"]}
+{"question": "What encryption is used for data at rest?", "relevant_sources": ["aurora-security.md"]}
+{"question": "What uptime does Aurora commit to for the Vectors service?", "relevant_sources": ["aurora-sla.md"]}
+{"question": "Which regions does Aurora Cloud operate in?", "relevant_sources": ["aurora-overview.md"]}
+{"question": "How long are audit logs retained on the Enterprise plan?", "relevant_sources": ["aurora-security.md"]}
+{"question": "What is the support response time for a critical P1 issue on the Business plan?", "relevant_sources": ["aurora-sla.md"]}
+{"question": "Do annual and non-profit discounts stack with promotional credits?", "relevant_sources": ["aurora-pricing.md"]}
+{"question": "How much free credit do new accounts get and for how long?", "relevant_sources": ["aurora-overview.md"]}
