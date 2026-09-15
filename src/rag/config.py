@@ -17,6 +17,11 @@ def _get_float(name: str, default: float) -> float:
     return float(raw) if raw else default
 
 
+def _get_bool(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    return raw.strip().lower() in {"1", "true", "yes", "on"} if raw else default
+
+
 @dataclass
 class Settings:
     ollama_host: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
@@ -26,6 +31,8 @@ class Settings:
     chunk_overlap: int = _get_int("CHUNK_OVERLAP", 150)
     top_k: int = _get_int("TOP_K", 5)
     mmr_lambda: float = _get_float("MMR_LAMBDA", 0.5)
+    rerank: bool = _get_bool("RERANK", False)
+    rerank_candidates: int = _get_int("RERANK_CANDIDATES", 20)
     index_dir: Path = PROJECT_ROOT / os.getenv("INDEX_DIR", "data/index")
     request_timeout: float = _get_float("REQUEST_TIMEOUT", 120.0)
 
@@ -36,3 +43,5 @@ class Settings:
             raise ValueError("MMR_LAMBDA must be within [0, 1]")
         if self.top_k < 1:
             raise ValueError("TOP_K must be >= 1")
+        if self.rerank_candidates < self.top_k:
+            raise ValueError("RERANK_CANDIDATES must be >= TOP_K")

@@ -1,7 +1,7 @@
 PY ?= $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 export PYTHONPATH := src
 
-.PHONY: install ingest ask eval serve test clean
+.PHONY: install ingest ask eval serve api test clean
 
 install:
 	$(PY) -m pip install -r requirements.txt
@@ -17,6 +17,9 @@ eval:
 
 serve:
 	$(PY) -m rag.cli serve
+
+api:
+	$(PY) -m rag.cli api
 
 test:
 	$(PY) -m pytest -q

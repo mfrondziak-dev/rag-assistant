@@ -18,6 +18,8 @@ def _settings_from_args(args: argparse.Namespace) -> Settings:
         settings.index_dir = Path(args.index)
     if getattr(args, "top_k", None):
         settings.top_k = args.top_k
+    if getattr(args, "rerank", False):
+        settings.rerank = True
     return settings
 
 
@@ -109,6 +111,15 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     )
 
 
+def _cmd_api(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    from .api import app
+
+    uvicorn.run(app, host=args.host, port=args.port)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="rag", description="Local RAG over your documents")
     parser.add_argument("--version", action="version", version="rag-assistant 0.1.0")
@@ -123,6 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_ask.add_argument("question")
     p_ask.add_argument("--top-k", type=int, default=None)
     p_ask.add_argument("--show-context", action="store_true")
+    p_ask.add_argument("--rerank", action="store_true")
     p_ask.add_argument("--json", action="store_true")
     p_ask.add_argument("--index", default=None)
     p_ask.set_defaults(func=_cmd_ask)
@@ -132,6 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval.add_argument("-k", type=int, default=5)
     p_eval.add_argument("--limit", type=int, default=None)
     p_eval.add_argument("--judge", action="store_true")
+    p_eval.add_argument("--rerank", action="store_true")
     p_eval.add_argument("--index", default=None)
     p_eval.set_defaults(func=_cmd_eval)
 
@@ -141,6 +154,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_serve = sub.add_parser("serve", help="launch the Streamlit UI")
     p_serve.add_argument("--port", type=int, default=8501)
     p_serve.set_defaults(func=_cmd_serve)
+
+    p_api = sub.add_parser("api", help="run the FastAPI service")
+    p_api.add_argument("--host", default="127.0.0.1")
+    p_api.add_argument("--port", type=int, default=8000)
+    p_api.set_defaults(func=_cmd_api)
     return parser
 
 

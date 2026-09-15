@@ -4,6 +4,7 @@ import numpy as np
 
 from .interfaces import Embedder
 from .models import SearchResult
+from .rerank import LLMReranker
 from .store import VectorStore, l2_normalize
 
 
@@ -15,36 +16,49 @@ class Retriever:
         top_k: int = 5,
         mmr_lambda: float = 0.5,
         fetch_k: int | None = None,
+        reranker: LLMReranker | None = None,
     ) -> None:
         self._store = store
         self._embedder = embedder
         self._top_k = top_k
         self._mmr_lambda = mmr_lambda
         self._fetch_k = fetch_k or max(top_k * 4, top_k)
+        self._reranker = reranker
 
     def retrieve(self, query: str) -> list[SearchResult]:
         if len(self._store) == 0:
             return []
-        query_vector = self._embedder.embed([query])[0]
-        return self.retrieve_by_vector(query_vector)
+        vector = self._embedder.embed([query])[0]
+        return self._select(query, vector)
 
     def retrieve_by_vector(self, query_vector: np.ndarray) -> list[SearchResult]:
         if len(self._store) == 0:
             return []
-        query = l2_normalize(np.asarray(query_vector, dtype=np.float32).reshape(-1))
-        scores = self._store.matrix @ query
+        return self._select(None, query_vector)
+
+    def _select(self, query: str | None, query_vector: np.ndarray) -> list[SearchResult]:
+        query_norm = l2_normalize(np.asarray(query_vector, dtype=np.float32).reshape(-1))
+        scores = self._store.matrix @ query_norm
         pool_size = min(self._fetch_k, len(self._store))
         candidates = list(np.argsort(-scores)[:pool_size])
+
+        if self._reranker is not None and query is not None:
+            pool = [
+                SearchResult(document=self._store.documents[i], score=float(scores[i]))
+                for i in candidates
+            ]
+            return self._reranker.rerank(query, pool)[: self._top_k]
+
         if self._mmr_lambda >= 1.0 or len(candidates) <= self._top_k:
             selected = candidates[: self._top_k]
         else:
-            selected = self._mmr(query, candidates, scores)
+            selected = self._mmr(candidates, scores)
         return [
             SearchResult(document=self._store.documents[i], score=float(scores[i]))
             for i in selected
         ]
 
-    def _mmr(self, query: np.ndarray, candidates: list[int], scores: np.ndarray) -> list[int]:
+    def _mmr(self, candidates: list[int], scores: np.ndarray) -> list[int]:
         selected: list[int] = []
         remaining = candidates[:]
         while remaining and len(selected) < self._top_k:

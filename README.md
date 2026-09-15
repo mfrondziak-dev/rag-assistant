@@ -18,10 +18,15 @@ No API keys, no cloud, no vendor lock-in: embeddings and generation are served l
         vector store (NumPy, cosine, persisted)
                         │  retrieve: top-k + MMR diversity
                         ▼
+              optional LLM reranker (relevance judge)
+                        │
+                        ▼
    prompt with numbered context  ──►  Ollama chat (e.g. llama3.1)
                         │
                         ▼
             answer + sources with citations [1][2]
+
+        exposed through a CLI, a Streamlit UI and a FastAPI service
 ```
 
 ## Why this project
@@ -35,6 +40,11 @@ parts that actually matter in production:
   grounding with an LLM-as-judge.
 - **MMR retrieval** — optional maximal marginal relevance to trade relevance for diversity
   and avoid five copies of the same paragraph.
+- **Optional LLM reranker** — a second-stage relevance judge that reorders candidates and
+  measurably improves answer grounding (see the evaluation note below).
+- **HTTP API** — a FastAPI service (`GET /health`, `POST /search`, `POST /ask`) with
+  dependency-injected, offline-testable endpoints.
+- **Multiple formats** — Markdown, text, reStructuredText and PDF.
 - **Testability** — the retriever, store and pipeline depend on `Embedder`/`LLM` protocols,
   so the whole stack is unit-tested offline with fakes (no network, no Ollama in CI).
 
@@ -46,12 +56,14 @@ parts that actually matter in production:
 | Generation   | Ollama `llama3.1` (any chat model works)                          |
 | Vector store | Custom NumPy cosine index persisted to `.npy` + `.jsonl`          |
 | Retrieval    | top-k cosine + optional MMR (`mmr_lambda`)                        |
+| Reranking    | optional LLM-as-relevance-judge (`LLMReranker`)                   |
 | CLI          | `argparse`                                                        |
 | UI           | Streamlit (optional)                                              |
+| API          | FastAPI + Uvicorn (optional)                                      |
 | Tests        | pytest (offline, dependency-injected fakes)                       |
 
-The only hard dependencies are `requests` and `numpy`. `pypdf` (PDF) and `streamlit` (UI)
-are optional extras.
+The hard dependencies are `requests` and `numpy`. `pypdf` (PDF), `streamlit` (UI) and
+`fastapi`/`uvicorn` (API) are optional extras.
 
 ## Quickstart
 
@@ -83,6 +95,26 @@ Streamlit UI:
 make serve        # http://localhost:8501
 ```
 
+HTTP API:
+
+```bash
+make api          # http://localhost:8000
+
+curl localhost:8000/health
+curl -X POST localhost:8000/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question": "What encryption is used for data at rest?"}'
+curl -X POST localhost:8000/search \
+  -H 'Content-Type: application/json' \
+  -d '{"question": "pricing", "top_k": 3}'
+```
+
+Enable the LLM reranker for any command with `RERANK=1` (or `--rerank`):
+
+```bash
+RERANK=1 make ask Q="Do discounts stack with promotional credits?"
+```
+
 ## Configuration
 
 All settings come from environment variables (see `.env.example`):
@@ -96,6 +128,8 @@ All settings come from environment variables (see `.env.example`):
 | `CHUNK_OVERLAP` | `150`                    | Overlap between chunks           |
 | `TOP_K`         | `5`                      | Retrieved chunks per question    |
 | `MMR_LAMBDA`    | `0.5`                    | 1.0 = relevance, 0.0 = diversity |
+| `RERANK`        | `0`                      | Enable the LLM reranker (0/1)    |
+| `RERANK_CANDIDATES` | `20`                 | Candidates retrieved before rerank |
 
 ## Evaluation
 
@@ -115,7 +149,9 @@ retrieved context and averages the result.
 > **A finding, not a caveat.** On the sample corpus, retrieval is perfect, yet a small 8B
 > model still stated that discounts "stack" when the document says the opposite. Retrieval
 > quality and answer faithfulness are *different* problems — which is exactly why the
-> judge step exists. Try `--judge` and a larger chat model to see the difference.
+> judge step exists. Turning on the reranker (`RERANK=1`) pulls the exact clause to the top
+> and the same model then answers correctly ("Discounts do not stack with promotional
+> credits"). That before/after is the point: measure, then improve the right stage.
 
 ## Project layout
 
@@ -128,12 +164,14 @@ rag-assistant/
 │   ├── text.py           # loading + sentence-aware chunking
 │   ├── ollama_client.py  # embeddings + chat (batch with fallback)
 │   ├── store.py          # NumPy vector store with persistence
-│   ├── retriever.py      # top-k + MMR
+│   ├── retriever.py      # top-k + MMR (+ optional reranker)
+│   ├── rerank.py         # LLM-as-relevance-judge reranker
 │   ├── pipeline.py       # prompt construction, citations, refusal
 │   ├── evaluate.py       # retrieval metrics + LLM-as-judge
 │   ├── ingest.py         # build the index
 │   ├── factory.py        # wire components from Settings
-│   └── cli.py            # ingest / ask / eval / models / serve
+│   ├── api.py            # FastAPI service (/health, /search, /ask)
+│   └── cli.py            # ingest / ask / eval / models / serve / api
 ├── app/streamlit_app.py  # optional UI
 ├── data/raw/             # sample documents (fictional "Aurora Cloud")
 ├── data/eval/            # labelled evaluation set
@@ -143,7 +181,7 @@ rag-assistant/
 ## Testing
 
 ```bash
-make test      # 19 tests, no network required
+make test      # 29 tests, no network required
 ```
 
 ## License
