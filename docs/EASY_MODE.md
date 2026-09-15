@@ -24,6 +24,9 @@ Skrypt sam:
 3. pobierze brakujące modele (`nomic-embed-text`, `llama3.1`) — jednorazowo,
 4. otworzy aplikację w przeglądarce.
 
+**Windows:** zamiast `./start.sh` uruchom **`start.bat`** (dwuklik albo z terminala). Robi
+dokładnie to samo i sam otwiera przeglądarkę.
+
 ### Skrót w menu systemowym
 
 Żeby uruchamiać jednym kliknięciem (bez terminala):
@@ -34,6 +37,12 @@ bash scripts/install-desktop.sh
 
 Doda wpis **„Zapytaj swoje dokumenty”** w menu aplikacji oraz skrót na pulpicie.
 Uruchomienie z menu pokaże okno terminala z postępem — to normalne.
+
+**Windows** (skrót na pulpicie):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-desktop.ps1
+```
 
 ### Jak korzystać
 
@@ -109,6 +118,9 @@ The script will: create the environment and install dependencies (first run only
 Ollama is running (starting it in the background if needed), download the missing models
 (`nomic-embed-text`, `llama3.1`) once, and open the app in your browser.
 
+**Windows:** run **`start.bat`** instead of `./start.sh` (double-click it or run it from a
+terminal). It does the same and opens the browser for you.
+
 ### Add a menu shortcut
 
 To launch with a single click (no terminal):
@@ -118,6 +130,12 @@ bash scripts/install-desktop.sh
 ```
 
 This adds an **“Ask your documents”** entry to the application menu and a desktop shortcut.
+
+**Windows** (desktop shortcut):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-desktop.ps1
+```
 
 ### How to use
 

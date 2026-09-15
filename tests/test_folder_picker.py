@@ -63,3 +63,27 @@ def test_error_running_dialog_returns_none():
         tkinter_picker=lambda: None,
     )
     assert picked is None
+
+
+def test_windows_powershell_picker():
+    def run(command, **kwargs):
+        assert command[0] == "powershell"
+        return SimpleNamespace(returncode=0, stdout="C:\\Users\\me\\Documents\r\n")
+
+    picked = pick_folder(
+        which=_which(set()),
+        run=run,
+        tkinter_picker=lambda: None,
+        is_windows=True,
+    )
+    assert picked == "C:\\Users\\me\\Documents"
+
+
+def test_windows_cancel_falls_through_to_tkinter():
+    picked = pick_folder(
+        which=_which(set()),
+        run=_run_returning("", returncode=1),
+        tkinter_picker=lambda: "C:\\fallback",
+        is_windows=True,
+    )
+    assert picked == "C:\\fallback"

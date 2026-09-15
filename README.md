@@ -94,6 +94,24 @@ make ask Q="How much does the Team plan cost per month?"
 make eval
 ```
 
+### Windows
+
+The app and CLI are pure Python and run on Windows. Use the batch launcher (double-click
+`start.bat`, or run it from a terminal):
+
+```bat
+start.bat
+```
+
+For a desktop shortcut:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-desktop.ps1
+```
+
+The `make` targets and `*.sh` scripts assume a Unix shell; on Windows run the CLI directly,
+e.g. `set PYTHONPATH=src` then `python -m rag.cli ask "your question"`.
+
 Streamlit UI:
 
 ```bash
@@ -130,11 +148,16 @@ built-in **troubleshooting panel** that checks Ollama, the models, your document
 index, and can start Ollama for you.
 
 ```bash
-make easy        # or: ./start.sh
+make easy        # or: ./start.sh        (Linux/macOS)
 ```
 
-`start.sh` creates the environment, starts Ollama if needed, downloads the missing models
-once, and opens the app. To launch it from the application menu with a single click:
+```bat
+start.bat        :: Windows (double-click or run in a terminal)
+```
+
+`start.sh` / `start.bat` create the environment, start Ollama if needed, download the
+missing models once, and open the app. To launch it from the application menu / desktop
+with a single click:
 
 ```bash
 make desktop     # or: bash scripts/install-desktop.sh
@@ -201,13 +224,14 @@ rag-assistant/
 │   ├── api.py            # FastAPI service (/health, /search, /ask)
 │   ├── i18n.py           # PL/EN strings for the easy-mode UI
 │   ├── simple.py         # safe upload storage + library helpers
+│   ├── folder_picker.py  # native folder chooser (zenity/kdialog/PowerShell/tkinter)
 │   └── cli.py            # ingest / ask / eval / models / serve / api
 ├── app/
 │   ├── streamlit_app.py  # technical UI (sliders, context)
 │   └── simple_app.py     # bilingual easy-mode UI (upload + chat)
-├── start.sh              # one-command launcher
+├── start.sh / start.bat  # one-command launchers (Linux/macOS, Windows)
 ├── rag.sh                # CLI wrapper that works from any directory
-├── scripts/              # install-desktop.sh (menu shortcut)
+├── scripts/              # install-desktop.sh (Linux) / install-desktop.ps1 (Windows)
 ├── data/raw/             # sample documents (fictional "Aurora Cloud")
 │   └── private/          # your own documents (gitignored)
 ├── data/uploads/         # easy-mode uploads (gitignored)
@@ -218,7 +242,7 @@ rag-assistant/
 ## Testing
 
 ```bash
-make test      # 74 tests, no network required
+make test      # 76 tests, no network required
 ```
 
 For a hands-on end-to-end walkthrough (CLI, reranker comparison, evaluation, API, UI and
