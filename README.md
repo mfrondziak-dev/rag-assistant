@@ -1,5 +1,7 @@
 # Local RAG Assistant
 
+[![CI](https://github.com/mfrondziak-dev/rag-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/mfrondziak-dev/rag-assistant/actions/workflows/ci.yml)
+
 A small, dependency-light **retrieval-augmented generation (RAG)** system that runs entirely
 on your machine. It indexes your own documents, retrieves the most relevant passages, and
 answers questions with **inline citations** — plus a built-in **evaluation harness** for both
